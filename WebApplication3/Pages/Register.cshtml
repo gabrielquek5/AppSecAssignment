@@ -1,0 +1,160 @@
+﻿@page
+@model WebApplication3.Pages.RegisterModel
+@{
+}
+@section Scripts{
+<script>
+    function testPasswordStrength(password) {
+        //console.log('testPasswordStrength called');
+        // Your custom password strength logic here
+        var score = 0;
+
+        // Check if the password meets each criteria
+        if (password.length >= 12) {
+            score++;
+        }
+
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) {
+            score++;
+        }
+
+        if (/\d/.test(password)) {
+            score++;
+        }
+
+        var hasSpecialChar = /[!@@#$%^&*()\-_=+{}|;:'",.<>/?]/.test(password);
+
+        if (hasSpecialChar) {
+            score++;
+        }
+
+        // Update the feedback based on the custom score
+        var passwordStrengthFeedback = document.getElementById('passwordStrengthFeedback');
+        passwordStrengthFeedback.innerText = getFeedbackText(score);
+    }
+
+    function getFeedbackText(score) {
+        //console.log('getFeedbackText called');
+
+        switch (score) {
+            case 0:
+                return 'Very Weak';
+            case 1:
+                return 'Weak';
+            case 2:
+                return 'Medium';
+            case 3:
+                return 'Strong';
+            case 4:
+                return 'Very Strong';
+            default:
+                return 'Password strength could not be determined.';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        //console.log('DOMContentLoaded event fired');
+
+        var passwordInput = document.getElementById('txtPassword');
+
+        passwordInput.addEventListener('input', function () {
+            //console.log('Input event captured');
+            var password = passwordInput.value;
+
+            testPasswordStrength(password);
+        });
+    });
+</script>
+}
+
+<div class="container mt-5">
+
+	<div class="row justify-content-center align-items-center">
+
+		<div class="col-sm-12 col-md-12 col-lg-4">
+
+			<form method="post" enctype="multipart/form-data">
+				<div asp-validation-summary="All" class="text-danger"></div>
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.FirstName">First Name</label>
+					<input type="text" asp-for="RModel.FirstName" class="form-control" />
+					<span asp-validation-for="RModel.FirstName" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.LastName">Last Name</label>
+					<input type="text" asp-for="RModel.LastName" class="form-control" />
+					<span asp-validation-for="RModel.LastName" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label">Gender</label>
+
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" asp-for="RModel.Gender" value="Male" id="genderMale">
+						<label class="form-check-label" for="genderMale">Male</label>
+					</div>
+
+					<div class="form-check form-check-inline">
+						<input class="form-check-input" type="radio" asp-for="RModel.Gender" value="Female" id="genderFemale">
+						<label class="form-check-label" for="genderFemale">Female</label>
+					</div>
+
+					<span asp-validation-for="RModel.Gender" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.NRIC">NRIC</label>
+					<input type="text" asp-for="RModel.NRIC" class="form-control" />
+					<span asp-validation-for="RModel.NRIC" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.Email">Email Address</label>
+					<input type="text" asp-for="RModel.Email" class="form-control" />
+					<span asp-validation-for="RModel.Email" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.DateOfBirth">Date OfBirth</label>
+					<input type="date" asp-for="RModel.DateOfBirth" class="form-control" />
+					<span asp-validation-for="RModel.DateOfBirth" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" id="FileUploadControl" asp-for="RModel.Resume">Resume</label>
+					<input type="file" asp-for="RModel.Resume" class="form-control" />
+					<span asp-validation-for="RModel.Resume" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.WhoAmI">About Me</label>
+					<input type="text" asp-for="RModel.WhoAmI" class="form-control" />
+					<span asp-validation-for="RModel.WhoAmI" class="text-danger"></span>
+				</div>
+
+				<div class="mb-3">
+					<label class="form-label" for="txtPassword" asp-for="RModel.Password">Password</label>
+					<input type="password" id="txtPassword" oninput="testPasswordStrength(this.value)" asp-for="RModel.Password" class="form-control" />
+
+					<span asp-validation-for="RModel.Password" class="text-danger"></span>
+					<div class="text-muted" id="passwordStrengthFeedback"></div>
+				</div>
+
+
+				<div class="mb-3">
+					<label class="form-label" asp-for="RModel.ConfirmPassword">Confirm Password</label>
+					<input type="password" asp-for="RModel.ConfirmPassword" class="form-control" />
+					<span asp-validation-for="RModel.ConfirmPassword" class="text-danger"></span>
+				</div>
+
+
+				<div class="mb-3">
+					<button type="submit" class="btn btn-primary">Register</button>
+				</div>
+			</form>
+
+		</div>
+	</div>
+</div>
