@@ -3,13 +3,19 @@
 @{
 }
 @section Scripts{
+	<script src="https://www.google.com/recaptcha/api.js?render=6LcunE4pAAAAADxro5z8VRF1YkzLdFSSKD1oE0L-"></script>
+	<script>
+		grecaptcha.ready(function () {
+			grecaptcha.execute('6LcunE4pAAAAADxro5z8VRF1YkzLdFSSKD1oE0L-', { action: 'Login' }).then(function (token) {
+				document.getElementById("g-recaptcha-response").value = token;
+			});
+		});
+	</script>
 <script>
     function testPasswordStrength(password) {
-        //console.log('testPasswordStrength called');
-        // Your custom password strength logic here
+
         var score = 0;
 
-        // Check if the password meets each criteria
         if (password.length >= 12) {
             score++;
         }
@@ -34,7 +40,7 @@
     }
 
     function getFeedbackText(score) {
-        //console.log('getFeedbackText called');
+
 
         switch (score) {
             case 0:
@@ -53,18 +59,46 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        //console.log('DOMContentLoaded event fired');
+
 
         var passwordInput = document.getElementById('txtPassword');
 
         passwordInput.addEventListener('input', function () {
-            //console.log('Input event captured');
+
             var password = passwordInput.value;
 
             testPasswordStrength(password);
         });
     });
 </script>
+	<script>
+		// Function to validate password complexity on the client side
+		function validatePassword() {
+			var password = document.getElementById('RModel.Password').value;
+
+			// Define your password complexity rules
+			var regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/;
+
+			// Check if the password meets the complexity requirements
+			if (!regex.test(password)) {
+				// If not, show an error message
+				document.getElementById('passwordError').innerText = 'Password must have at least 8 characters, including one uppercase letter, one lowercase letter, one digit, and one special character.';
+				return false;
+			} else {
+				// If the password is valid, clear the error message
+				document.getElementById('passwordError').innerText = '';
+				return true;
+			}
+		}
+
+		// Hook into the form submission to perform client-side validation
+		document.getElementById('registerForm').addEventListener('submit', function (event) {
+			if (!validatePassword()) {
+				// If the password is not valid, prevent the form submission
+				event.preventDefault();
+			}
+		});
+	</script>
 }
 
 <div class="container mt-5">
@@ -123,9 +157,9 @@
 				</div>
 
 				<div class="mb-3">
-					<label class="form-label" id="FileUploadControl" asp-for="RModel.Resume">Resume</label>
-					<input type="file" asp-for="RModel.Resume" class="form-control" />
-					<span asp-validation-for="RModel.Resume" class="text-danger"></span>
+					<label class="form-label" asp-for="RModel.ResumeFile">Resume</label>
+					<input type="file" asp-for="RModel.ResumeFile" class="form-control" />
+					<span asp-validation-for="RModel.ResumeFile" class="text-danger"></span>
 				</div>
 
 				<div class="mb-3">
@@ -137,7 +171,7 @@
 				<div class="mb-3">
 					<label class="form-label" for="txtPassword" asp-for="RModel.Password">Password</label>
 					<input type="password" id="txtPassword" oninput="testPasswordStrength(this.value)" asp-for="RModel.Password" class="form-control" />
-
+					<span id="passwordError" class="text-danger"></span>
 					<span asp-validation-for="RModel.Password" class="text-danger"></span>
 					<div class="text-muted" id="passwordStrengthFeedback"></div>
 				</div>

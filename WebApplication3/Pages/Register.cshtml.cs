@@ -7,120 +7,121 @@ using WebApplication3.ViewModels;
 using WebApplication3.Model;
 using System.Linq;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Hosting.Server;
-using System.IO;
 using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
+using System.Net;
+using System.Text.Encodings.Web;
 
 namespace WebApplication3.Pages
 {
-
     public class RegisterModel : PageModel
-	{
-
-		private UserManager<ApplicationUser> userManager { get; }
-		private SignInManager<ApplicationUser> signInManager { get; }
-        private  IWebHostEnvironment environment;
+    {
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly IWebHostEnvironment environment;
 
         [BindProperty]
-		public Register RModel { get; set; }
+        public Register RModel { get; set; }
 
-
-        public RegisterModel(UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        IWebHostEnvironment environment)
+        public RegisterModel(UserManager<ApplicationUser> userManager, IWebHostEnvironment environment)
         {
-			this.userManager = userManager;
-			this.signInManager = signInManager;
+            this.userManager = userManager;
             this.environment = environment;
-
         }
 
-
-		public async Task<IActionResult> OnPostAsync()
-		{
-			if (ModelState.IsValid)
-			{
-				/*file upload */
-                /*if (RModel.Resume != null && RModel.Resume.Length > 0)
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (ModelState.IsValid)
+            {
+                if (await ValidateCaptchaAsync())
                 {
-                    // Validate file type and size if needed
-                    var allowedExtensions = new[] { ".docx", ".pdf" };
-                    var fileExtension = Path.GetExtension(RModel.Resume.FileName).ToLower();
-                    if (!allowedExtensions.Contains(fileExtension) || RModel.Resume.Length > 102400)
+                    var dataProtectionProvider = Microsoft.AspNetCore.DataProtection.DataProtectionProvider.Create("EncryptData");
+                    var protector = dataProtectionProvider.CreateProtector("MySecretKey");
+
+                    // Check if the email is unique
+                    var isEmailUnique = await IsEmailUniqueAsync(RModel.Email);
+                    if (!isEmailUnique)
                     {
-                        ModelState.AddModelError("RModel.Resume", "Invalid file type or size.");
+                        ModelState.AddModelError(nameof(RModel.Email), "Email address is already in use.");
                         return Page();
                     }
-                    var uploadsPath = Path.Combine(environment.WebRootPath, "uploads");
-                    if (!Directory.Exists(uploadsPath))
+
+                    // Hash the initial password
+                    var initialPasswordHash = userManager.PasswordHasher.HashPassword(null, RModel.Password);
+
+                    var user = new ApplicationUser()
                     {
-                        Directory.CreateDirectory(uploadsPath);
+                        FirstName = RModel.FirstName,
+                        LastName = RModel.LastName,
+                        Email = RModel.Email,
+                        Gender = RModel.Gender,
+                        NRIC = protector.Protect(RModel.NRIC),
+                        DateOfBirth = RModel.DateOfBirth,
+                        ResumeFile = RModel.ResumeFile,
+                        WhoAmI = HtmlEncoder.Default.Encode(RModel.WhoAmI),
+                        UserName = RModel.Email,
+                        // Store the hashed initial password in the PasswordHistory
+                        PasswordHistory = initialPasswordHash
+                    };
+
+                    var result = await userManager.CreateAsync(user, RModel.Password);
+                    if (result.Succeeded)
+                    {
+                        return RedirectToPage("Login");
                     }
 
-                    var fileName = Guid.NewGuid().ToString() + "_" + RModel.Resume.FileName;
-                    var filePath = Path.Combine(uploadsPath, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    foreach (var error in result.Errors)
                     {
-                        await RModel.Resume.CopyToAsync(stream);
+                        ModelState.AddModelError("", error.Description);
                     }
 
-					// Now you can save the 'fileName' to your database or use it as needed
-					*//*RModel.Resume = fileName;*//*
-				}*/
+                    ModelState.AddModelError("", "Captcha validation failed");
+                }
+            }
 
-                var dataProtectionProvider = Microsoft.AspNetCore.DataProtection.DataProtectionProvider.Create("EncryptData");
-				var protector = dataProtectionProvider.CreateProtector("MySecretKey");
-
-				// Check if the email is unique
-				var isEmailUnique = await IsEmailUniqueAsync(RModel.Email);
-				if (!isEmailUnique)
-				{
-					ModelState.AddModelError(nameof(RModel.Email), "Email address is already in use.");
-					return Page();
-				}
-
-
-				var user = new ApplicationUser()
-				{
-					FirstName = RModel.FirstName,
-					LastName = RModel.LastName,
-					Email = RModel.Email,
-					Gender = RModel.Gender,
-					NRIC = protector.Protect(RModel.NRIC),
-					DateOfBirth = RModel.DateOfBirth,
-					Resume = RModel.Resume,
-					WhoAmI = RModel.WhoAmI,
-				};
-
-				var result = await userManager.CreateAsync(user, RModel.Password);
-				if (result.Succeeded)
-				{
-					await signInManager.SignInAsync(user, false);
-					return RedirectToPage("Login");
-				}
-
-				foreach (var error in result.Errors)
-				{
-					ModelState.AddModelError("", error.Description);
-				}
-			}
-		
-	return Page();
-	}
-
-
-
+            return Page();
+        }
 
         async Task<bool> IsEmailUniqueAsync(string Email)
-			{
+        {
+            var existingUser = await userManager.FindByEmailAsync(Email);
+            return existingUser == null;
+        }
 
-				var existingUser = await userManager.FindByEmailAsync(Email);
-				return existingUser == null;
-			}
+        private async Task<bool> ValidateCaptchaAsync()
+        {
+            bool result = true;
 
+            // When user submits the recaptcha form, the user gets a response POST parameter.
+            // captchaResponse consist of the user click pattern. Behaviour analytics! AI :)
+            string captchaResponse = Request.Form["g-recaptcha-response"];
 
+            // To send a GET request to Google along with the response and Secret key.
+            HttpWebRequest req = (HttpWebRequest)WebRequest.Create("https://www.google.com/recaptcha/api/siteverify?secret=6LcunE4pAAAAAEPbqG7YKaqKHIDfluXku5EgYT6g&response=" + captchaResponse);
 
-		}
-	}
+            try
+            {
+                // Codes to receive the Response in JSON format from Google Server
+                using (WebResponse wResponse = req.GetResponse())
+                {
+                    using (StreamReader readStream = new StreamReader(wResponse.GetResponseStream()))
+                    {
+                        // The response in JSON format
+                        string jsonResponse = readStream.ReadToEnd();
 
+                        // Deserialize JSON response
+                        var jsonObject = JsonSerializer.Deserialize<Login>(jsonResponse);
+
+                        // Create jsonObject to handle the response e.g success or Error
+                    }
+                }
+
+                return result;
+            }
+            catch (WebException ex)
+            {
+                throw ex;
+            }
+        }
+    }
+}

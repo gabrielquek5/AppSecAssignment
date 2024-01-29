@@ -3,12 +3,47 @@
 @{
     ViewData["Title"] = "Home page";
 }
+@section Scripts{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script>
+        function showSessionTimeoutNotification() {
+            toastr.warning('Your session has timed out. Please log in again.', '', {
+                timeOut: 600000 
+            });
+
+        // Set timeout duration in milliseconds
+        var sessionTimeoutDuration = @((int)TimeSpan.FromMinutes(1).TotalMilliseconds);
+
+        // Set a timer to show the notification when the session times out
+        setTimeout(function () {
+            showSessionTimeoutNotification();
+        }, sessionTimeoutDuration);
+
+        // Check if there's a success message in TempData and show a toast
+        var successMessage = '@TempData["SuccessMessage"]';
+        if (successMessage) {
+            toastr.success(successMessage);
+        }
+    </script>
+}
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <p>Your Information.</p>
+
+    <p>NRIC: @Model.UserInfo.NRIC</p>
+    <p>Full Name: @Model.UserInfo.FirstName @Model.UserInfo.LastName</p>
+    <p>Gender: @Model.UserInfo.Gender</p>
+    <p>Date of Birth (D/M/Y): @Model.UserInfo.DateOfBirth.ToString("yyyy-MM-dd")</p>
     <p>Email: @Model.UserInfo.Email</p>
+    
+    <p>About Me: @Model.UserInfo.WhoAmI</p>
 
-    <p>Full Name:@Model.UserInfo.FirstName @Model.UserInfo.LastName</p>
-
+    @if (!string.IsNullOrEmpty(Model.PasswordChangeNotification))
+    {
+        <div class="alert alert-warning" role="alert">
+            @Model.PasswordChangeNotification
+        </div>
+    }
 </div>

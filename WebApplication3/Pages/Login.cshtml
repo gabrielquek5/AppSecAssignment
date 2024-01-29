@@ -2,6 +2,34 @@
 @model WebApplication3.Pages.LoginModel
 @{
 }
+@section Scripts{
+	<script src="https://www.google.com/recaptcha/api.js?render=6LcunE4pAAAAADxro5z8VRF1YkzLdFSSKD1oE0L-"></script>
+	<script>
+		grecaptcha.ready(function () {
+			grecaptcha.execute('6LcunE4pAAAAADxro5z8VRF1YkzLdFSSKD1oE0L-', { action: 'Login' }).then(function (token) {
+				document.getElementById("g-recaptcha-response").value = token;
+			});
+		});
+	</script>
+	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script>
+		function showSessionTimeoutNotification() {
+			toastr.warning('Your session has timed out. Please log in again.', '', {
+				timeOut: 600000
+			});
+
+        // Set timeout duration in milliseconds
+        var sessionTimeoutDuration = @((int)TimeSpan.FromMinutes(1).TotalMilliseconds);
+
+        // Set a timer to show the notification when the session times out
+        setTimeout(function () {
+            showSessionTimeoutNotification();
+        }, sessionTimeoutDuration);
+    </script>
+
+}
 <div class="container mt-5">
 
 	<div class="row justify-content-center align-items-center">
@@ -10,7 +38,7 @@
 			<h1 class="mb-3">Login </h1>
 
 			<form method="post">
-
+				<div asp-validation-summary="All" class="text-danger"></div>
 				<div class="mb-3">
 					<label class="form-label" asp-for="LModel.Email">Email Address</label>
 					<input type="Text" asp-for="LModel.Email" class="form-control" />
@@ -19,7 +47,7 @@
 
 				<div class="mb-3">
 					<label class="form-label" asp-for="LModel.Password">Password</label>
-					<input type="Text" asp-for="LModel.Password" class="form-control" />
+					<input type="password" asp-for="LModel.Password" class="form-control" />
 					<span asp-validaton-for="LModel.Password" class="text-danger"></span>
 				</div>
 
@@ -28,10 +56,16 @@
 					<label class="form-check-label" asp-for="LModel.RememberMe">Remember Me?</label>
 				</div>
 
+				<input type="hidden" id="g-recaptcha-response" name="g-recaptcha-response" />
+				<div class="text-muted" id="lblMessage"></div>
+
+
 				<div class="mb-3">
 					<button type="submit" class="btn btn-primary">Login</button>
 				</div>
+				
 			</form>
+
 		</div>
 	</div>
 </div>

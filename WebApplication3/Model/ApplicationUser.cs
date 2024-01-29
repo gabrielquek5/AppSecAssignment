@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApplication3.Model
@@ -11,7 +12,10 @@ namespace WebApplication3.Model
 		public string NRIC { get; set; }
 		public override string Email { get; set; }
 		public DateTime DateOfBirth { get; set; }
-		public string Resume { get; set; }
-		public string WhoAmI { get; set; }
-	}
+        public string? ResumeFile { get; set; }
+        public string WhoAmI { get; set; }
+        public DateTime? LastPasswordChanged { get; set; }
+		public string? PasswordHistory { get; set; }
+
+    }
 }

@@ -3,6 +3,25 @@
 @{
     ViewData["Title"] = "Privacy Policy";
 }
+@section Scripts{
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script>
+        function showSessionTimeoutNotification() {
+            toastr.warning('Your session has timed out. Please log in again.', '', {
+                timeOut: 600000
+            });
+
+        // Set timeout duration in milliseconds
+        var sessionTimeoutDuration = @((int)TimeSpan.FromMinutes(1).TotalMilliseconds);
+
+        // Set a timer to show the notification when the session times out
+        setTimeout(function () {
+            showSessionTimeoutNotification();
+        }, sessionTimeoutDuration);
+    </script>
+}
+
 <h1>@ViewData["Title"]</h1>
 
 <p>Use this page to detail your site's privacy policy.</p>
